@@ -3,12 +3,15 @@ package com.shiroha.mmdskin.renderer.render;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.shiroha.mmdskin.NativeFunc;
+import com.shiroha.mmdskin.compat.vr.VRArmHider;
+import com.shiroha.mmdskin.compat.vr.VRBoneDriver;
 import com.shiroha.mmdskin.config.ModelConfigManager;
 import com.shiroha.mmdskin.renderer.animation.AnimationStateManager;
 import com.shiroha.mmdskin.renderer.core.FirstPersonManager;
 import com.shiroha.mmdskin.renderer.core.IMMDModel;
 import com.shiroha.mmdskin.renderer.core.RenderContext;
 import com.shiroha.mmdskin.renderer.core.RenderParams;
+import com.shiroha.mmdskin.renderer.model.AbstractMMDModel;
 import com.shiroha.mmdskin.renderer.model.MMDModelManager;
 import com.shiroha.mmdskin.ui.network.PlayerModelSyncManager;
 import net.minecraft.client.Minecraft;
@@ -83,10 +86,30 @@ public final class PlayerMixinDelegate {
 
         float[] size = PlayerRenderHelper.getModelSize(modelData);
 
-        // 第一人称管理
+        // VR 模式集成：启用 IK 并传递追踪数据
+        boolean isVR = isLocalPlayer && VRArmHider.isLocalPlayerInVR();
+        if (model instanceof AbstractMMDModel abstractModel) {
+            if (isVR) {
+                // 启用 Rust 侧 VR IK
+                if (!abstractModel.isVrActive()) {
+                    VRBoneDriver.setVREnabled(model.getModelHandle(), true);
+                    abstractModel.setVrActive(true);
+                }
+                // 每帧传递控制器追踪数据（转换到模型局部空间）
+                VRBoneDriver.driveModel(model.getModelHandle(), player, tickDelta);
+            } else if (abstractModel.isVrActive()) {
+                // 退出 VR 模式时恢复
+                VRBoneDriver.setVREnabled(model.getModelHandle(), false);
+                abstractModel.setVrActive(false);
+            }
+        }
+
+        // 第一人称管理（VR 模式下跳过，由 VR IK 接管）
         float combinedScale = size[0] * ModelConfigManager.getConfig(selectedModel).modelScale;
-        FirstPersonManager.preRender(NativeFunc.GetInst(), model.getModelHandle(), combinedScale, isLocalPlayer);
-        boolean isFirstPerson = isLocalPlayer && FirstPersonManager.isActive();
+        if (!isVR) {
+            FirstPersonManager.preRender(NativeFunc.GetInst(), model.getModelHandle(), combinedScale, isLocalPlayer);
+        }
+        boolean isFirstPerson = !isVR && isLocalPlayer && FirstPersonManager.isActive();
 
         AnimationStateManager.updateAnimationState(player, modelData);
         RenderParams params = PlayerRenderHelper.calculateRenderParams(player, modelData, tickDelta);

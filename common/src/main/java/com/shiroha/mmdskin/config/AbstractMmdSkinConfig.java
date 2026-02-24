@@ -56,4 +56,9 @@ public abstract class AbstractMmdSkinConfig implements ConfigManager.IConfigProv
     @Override public float getFirstPersonCameraVerticalOffset() { return data.firstPersonCameraVerticalOffset; }
     @Override public boolean isDebugHudEnabled() { return data.debugHudEnabled; }
     @Override public int getTextureCacheBudgetMB() { return data.textureCacheBudgetMB; }
+
+    // ==================== VR 联动 ====================
+
+    @Override public boolean isVREnabled() { return data.vrEnabled; }
+    @Override public float getVRArmIKStrength() { return data.vrArmIKStrength; }
 }

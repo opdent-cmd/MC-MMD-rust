@@ -68,6 +68,10 @@ public class ConfigData {
     // 调试
     public boolean debugHudEnabled = false;
     
+    // VR 联动
+    public boolean vrEnabled = true;
+    public float vrArmIKStrength = 1.0f;
+    
     /**
      * 从文件加载配置
      */

@@ -352,6 +352,29 @@ public class ModConfigScreen {
             .setSaveConsumer(value -> data.physicsDebugLog = value)
             .build());
         
+        // ==================== VR 联动设置 ====================
+        ConfigCategory vrCategory = builder.getOrCreateCategory(
+            Component.translatable("gui.mmdskin.mod_settings.category.vr"));
+
+        vrCategory.addEntry(entryBuilder
+            .startBooleanToggle(
+                Component.translatable("gui.mmdskin.mod_settings.vr_enabled"),
+                data.vrEnabled)
+            .setDefaultValue(true)
+            .setTooltip(Component.translatable("gui.mmdskin.mod_settings.vr_enabled.tooltip"))
+            .setSaveConsumer(value -> data.vrEnabled = value)
+            .build());
+
+        vrCategory.addEntry(entryBuilder
+            .startIntSlider(
+                Component.translatable("gui.mmdskin.mod_settings.vr_arm_ik_strength"),
+                (int)(data.vrArmIKStrength * 100), 0, 100)
+            .setDefaultValue(100)
+            .setTooltip(Component.translatable("gui.mmdskin.mod_settings.vr_arm_ik_strength.tooltip"))
+            .setTextGetter(value -> Component.literal(value + "%"))
+            .setSaveConsumer(value -> data.vrArmIKStrength = value / 100.0f)
+            .build());
+
         // ==================== 调试设置分类 ====================
         ConfigCategory debugCategory = builder.getOrCreateCategory(
             Component.translatable("gui.mmdskin.mod_settings.category.debug"));

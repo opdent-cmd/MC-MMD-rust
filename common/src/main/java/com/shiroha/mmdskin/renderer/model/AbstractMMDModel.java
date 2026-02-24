@@ -56,6 +56,16 @@ public abstract class AbstractMMDModel implements IMMDModel {
     // 纹理引用键（dispose 时用于批量释放引用计数）
     protected List<String> textureKeys;
 
+    // VR 模式标志（由 PlayerMixinDelegate 在渲染前设置）
+    private volatile boolean vrActive;
+
+    // ===== VR 状态 =====
+
+    /** 设置 VR 激活状态（渲染前由 PlayerMixinDelegate 调用） */
+    public void setVrActive(boolean active) { this.vrActive = active; }
+
+    public boolean isVrActive() { return vrActive; }
+
     // ===== NativeFunc 访问 =====
 
     protected static NativeFunc getNf() {
@@ -124,10 +134,11 @@ public abstract class AbstractMMDModel implements IMMDModel {
                                      int packedLight, RenderContext context) {
         boolean stagePlaying = MMDCameraController.getInstance().isStagePlayingModel(model);
 
-        // 头部角度（舞台播放时归零，由 VMD 动画控制）
+        // 头部角度（优先级：舞台播放 > VR 追踪 > 普通头部角度）
         if (stagePlaying) {
             getNf().SetHeadAngle(model, 0.0f, 0.0f, 0.0f, context.isWorldScene());
-        } else {
+        } else if (!vrActive) {
+            // 非 VR 模式：使用普通头部角度计算
             float headAngleX = Mth.clamp(entityIn.getXRot(), -50.0f, 50.0f);
             float headAngleY = (entityYaw - Mth.lerp(tickDelta, entityIn.yHeadRotO, entityIn.yHeadRot)) % 360.0f;
             if (headAngleY < -180.0f) headAngleY += 360.0f;
@@ -140,9 +151,10 @@ public abstract class AbstractMMDModel implements IMMDModel {
                     : headAngleY * ((float) Math.PI / 180F);
             getNf().SetHeadAngle(model, pitchRad, yawRad, 0.0f, context.isWorldScene());
         }
+        // VR 模式：跳过 SetHeadAngle，由 Rust VR IK 接管头部旋转
 
-        // 眼球追踪
-        if (!stagePlaying) {
+        // 眼球追踪（VR 模式下跳过，由 VR 头部追踪替代）
+        if (!stagePlaying && !vrActive) {
             EyeTrackingHelper.updateEyeTracking(getNf(), model, entityIn, entityYaw, tickDelta, getModelName());
         }
 

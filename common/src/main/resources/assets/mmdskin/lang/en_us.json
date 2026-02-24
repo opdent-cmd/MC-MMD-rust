@@ -125,6 +125,12 @@
   "gui.mmdskin.mod_settings.debug_hud": "Performance Debug HUD",
   "gui.mmdskin.mod_settings.debug_hud.tooltip": "Show model memory/VRAM usage info on the top-left corner of the screen",
 
+  "gui.mmdskin.mod_settings.category.vr": "VR Integration",
+  "gui.mmdskin.mod_settings.vr_enabled": "Enable VR Integration",
+  "gui.mmdskin.mod_settings.vr_enabled.tooltip": "When enabled, VR player head and hand tracking will drive MMD model bones (requires Vivecraft)",
+  "gui.mmdskin.mod_settings.vr_arm_ik_strength": "Arm IK Strength",
+  "gui.mmdskin.mod_settings.vr_arm_ik_strength.tooltip": "Strength of VR hand tracking driving arm bones (0%=disabled, 100%=full)",
+
   "gui.mmdskin.refresh": "Refresh",
   "gui.mmdskin.select_all": "All",
   "gui.mmdskin.clear_all": "Clear",
