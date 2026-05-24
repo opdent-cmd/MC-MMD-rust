@@ -16,7 +16,7 @@ import com.shiroha.mmdskin.renderer.runtime.model.helper.LightingHelper;
 import com.shiroha.mmdskin.renderer.runtime.model.shared.MMDMaterial;
 import com.shiroha.mmdskin.renderer.runtime.model.shared.SubMeshDrawHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.world.entity.Entity;
 import org.apache.logging.log4j.LogManager;
@@ -108,7 +108,7 @@ final class MMDModelGpuSkinningRenderer {
         GL46C.glBindVertexArray(0);
         RenderSystem.activeTexture(GL46C.GL_TEXTURE0);
 
-        ShaderInstance currentShader = RenderSystem.getShader();
+        CompiledShaderProgram currentShader = RenderSystem.getShader();
         if (currentShader != null) {
             currentShader.clear();
         }
@@ -151,12 +151,12 @@ final class MMDModelGpuSkinningRenderer {
 
     private static void renderNormal(MMDModelGpuSkinning target, Minecraft minecraft,
                                      float lightIntensity, int blockLight, int skyLight, float skyDarken) {
-        ShaderInstance shader = RenderSystem.getShader();
+        CompiledShaderProgram shader = RenderSystem.getShader();
         if (shader == null) {
             logger.error("[GPU蒙皮] RenderSystem.getShader() 返回 null，跳过渲染");
             return;
         }
-        target.shaderProgram = shader.getId();
+        target.shaderProgram = shader.getProgramId();
 
         boolean irisActive = IrisCompat.isIrisShaderActive();
         float colorFactor = irisActive ? 1.0f : lightIntensity;
@@ -249,7 +249,7 @@ final class MMDModelGpuSkinningRenderer {
     private static void renderToon(MMDModelGpuSkinning target, Minecraft minecraft, float lightIntensity) {
         boolean irisActive = IrisCompat.isIrisShaderActive();
         if (irisActive) {
-            ShaderInstance irisShader = RenderSystem.getShader();
+            CompiledShaderProgram irisShader = RenderSystem.getShader();
             if (irisShader != null) {
                 target.setUniforms(irisShader, target.currentDeliverStack);
                 irisShader.apply();

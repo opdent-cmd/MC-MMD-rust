@@ -11,7 +11,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.world.entity.Entity;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -164,7 +164,7 @@ public class MMDModelOpenGL extends AbstractMMDModel {
         I_colorLocation = GlStateManager._glGetAttribLocation(shaderProgram, "iris_Color");
     }
 
-    public void setUniforms(ShaderInstance shader, PoseStack deliverStack) {
+    public void setUniforms(CompiledShaderProgram shader, PoseStack deliverStack) {
         setupShaderUniforms(shader, deliverStack, light0Direction, light1Direction, lightMapMaterial.tex);
     }
 

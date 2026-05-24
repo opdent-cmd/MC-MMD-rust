@@ -13,7 +13,8 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
@@ -246,7 +247,7 @@ public abstract class AbstractMMDModel implements IMMDModel {
         }
     }
 
-    protected static void setupShaderUniforms(ShaderInstance shader, PoseStack deliverStack,
+    protected static void setupShaderUniforms(CompiledShaderProgram shader, PoseStack deliverStack,
                                                 Vector3f light0Dir, Vector3f light1Dir, int lightMapTex) {
         if (shader.MODEL_VIEW_MATRIX != null)
             shader.MODEL_VIEW_MATRIX.set(computeModelViewMatrix(deliverStack));
@@ -258,14 +259,15 @@ public abstract class AbstractMMDModel implements IMMDModel {
             shader.LIGHT0_DIRECTION.set(light0Dir);
         if (shader.LIGHT1_DIRECTION != null)
             shader.LIGHT1_DIRECTION.set(light1Dir);
+        FogParameters fog = RenderSystem.getShaderFog();
         if (shader.FOG_START != null)
-            shader.FOG_START.set(RenderSystem.getShaderFogStart());
+            shader.FOG_START.set(fog.start());
         if (shader.FOG_END != null)
-            shader.FOG_END.set(RenderSystem.getShaderFogEnd());
+            shader.FOG_END.set(fog.end());
         if (shader.FOG_COLOR != null)
-            shader.FOG_COLOR.set(RenderSystem.getShaderFogColor());
+            shader.FOG_COLOR.set(fog.red(), fog.green(), fog.blue(), fog.alpha());
         if (shader.FOG_SHAPE != null)
-            shader.FOG_SHAPE.set(RenderSystem.getShaderFogShape().getIndex());
+            shader.FOG_SHAPE.set(fog.shape().getIndex());
         if (shader.TEXTURE_MATRIX != null)
             shader.TEXTURE_MATRIX.set(RenderSystem.getTextureMatrix());
         if (shader.GAME_TIME != null)
@@ -277,8 +279,8 @@ public abstract class AbstractMMDModel implements IMMDModel {
         if (shader.LINE_WIDTH != null)
             shader.LINE_WIDTH.set(RenderSystem.getShaderLineWidth());
 
-        shader.setSampler("Sampler1", lightMapTex);
-        shader.setSampler("Sampler2", lightMapTex);
+        shader.bindSampler("Sampler1", lightMapTex);
+        shader.bindSampler("Sampler2", lightMapTex);
 
         RenderSystem.setShaderTexture(1, lightMapTex);
         RenderSystem.setShaderTexture(2, lightMapTex);

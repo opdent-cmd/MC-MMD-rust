@@ -1,10 +1,7 @@
 {
   "key.categories.mmdskin": "MMDスキン",
   "key.mmdskin.config_wheel": "設定ホイール",
-  "key.mmdskin.maid_config_wheel": "メイド設定ホイール",
-
   "gui.mmdskin.config_wheel": "設定ホイール",
-  "gui.mmdskin.maid_config_wheel": "メイド設定",
   "gui.mmdskin.config.model_switch": "モデル切替",
   "gui.mmdskin.config.action_select": "アクション選択",
   "gui.mmdskin.config.material_control": "マテリアル制御",
@@ -12,11 +9,6 @@
   "gui.mmdskin.config.scene_mode": "シーン配置",
   "gui.mmdskin.config.stage_mode": "ステージモード",
   "gui.mmdskin.config.mod_settings": "Mod設定",
-  "gui.mmdskin.maid.model_switch": "モデル切替",
-  "gui.mmdskin.maid.action_select": "アクション選択",
-  "gui.mmdskin.maid.material_control": "マテリアル制御",
-  "gui.mmdskin.maid_action_wheel": "メイドアクションホイール",
-
   "gui.mmdskin.mod_settings.title": "MMDスキン - 設定",
   "gui.mmdskin.mod_settings.category.render": "レンダリング設定",
   "gui.mmdskin.mod_settings.category.performance": "パフォーマンス設定",
@@ -91,7 +83,6 @@
   "gui.mmdskin.action_wheel": "アクションホイール",
   "gui.mmdskin.select_action": "アクションを選択",
   "gui.mmdskin.model_selector": "モデル選択",
-  "gui.mmdskin.maid_model_selector": "メイドMMDモデル選択",
   "gui.mmdskin.action_config": "アクションホイール設定",
   "gui.mmdskin.rescan": "再スキャン",
 
@@ -189,12 +180,10 @@
   "gui.mmdskin.material_visibility.off": "OFF",
   "gui.mmdskin.material_visibility.invert": "反転",
   "gui.mmdskin.material_visibility.unnamed": "(名前なし)",
-  "gui.mmdskin.maid.default_name": "メイド",
   "gui.mmdskin.morph_wheel.select": "表情選択",
   "gui.mmdskin.morph_wheel.no_morphs": "利用可能な表情がありません",
   "gui.mmdskin.action_wheel.click_select": "◆ クリックで選択",
   "gui.mmdskin.action_wheel.no_actions": "アクション未設定、⚙ で設定",
-  "gui.mmdskin.maid_action_wheel.no_actions": "アクション未設定",
   "gui.mmdskin.config.stats": "利用可能: %s  |  選択済: %s",
   "gui.mmdskin.config.click_add": "←クリックで追加",
   "gui.mmdskin.config.click_remove": "クリックで削除→",
@@ -208,7 +197,6 @@
   "gui.mmdskin.source.builtin": "内蔵",
   "gui.mmdskin.source.model": "モデル",
   "gui.mmdskin.source.model_exclusive": "モデル専用",
-  "message.mmdskin.maid.model_not_found": "§cメイドモデルが見つかりません。先にメイドにMMDモデルを選択してください",
   "message.mmdskin.player.model_not_found": "§cプレイヤーモデルが見つかりません。先にMMDモデルを選択してください",
   "message.mmdskin.mod_settings.not_initialized": "§cMod設定画面が初期化されていません",
 

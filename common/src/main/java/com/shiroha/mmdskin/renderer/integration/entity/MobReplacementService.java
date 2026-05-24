@@ -18,7 +18,6 @@ public final class MobReplacementService {
     public static String getReplacementModelName(LivingEntity entity) {
         if (entity == null
                 || isPlayerLike(entity)
-                || isMaidEntity(entity)
                 || !MobReplacementTargetPolicy.isSupported(entity.getType())) {
             return null;
         }
@@ -35,12 +34,6 @@ public final class MobReplacementService {
 
         return ModelInfo.findByFolderName(modelName) != null ? modelName : null;
     }
-
-    public static boolean isMaidEntity(LivingEntity entity) {
-        String className = entity.getClass().getName();
-        return className.contains("EntityMaid") || className.contains("touhoulittlemaid");
-    }
-
     private static boolean isPlayerLike(LivingEntity entity) {
         return entity.getType().toString().equals(EntityType.PLAYER.toString());
     }

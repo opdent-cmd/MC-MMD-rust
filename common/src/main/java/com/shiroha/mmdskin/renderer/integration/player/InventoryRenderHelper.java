@@ -6,7 +6,7 @@ import com.shiroha.mmdskin.renderer.api.IMMDModel;
 import com.shiroha.mmdskin.renderer.api.RenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -32,7 +32,7 @@ public class InventoryRenderHelper {
         Quaternionf rotation = calculateRotation(player);
         matrixStack.mulPose(rotation);
 
-        RenderSystem.setShader(GameRenderer::getRendertypeEntityTranslucentShader);
+        RenderSystem.setShader(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT);
         model.render(player, entityYaw, 0.0f, new Vector3f(0.0f), tickDelta, matrixStack, packedLight, RenderContext.INVENTORY);
 
         matrixStack.popPose();

@@ -7,8 +7,6 @@ public final class NetworkOpCode {
     public static final int CUSTOM_ANIM = 1;
     public static final int RESET_PHYSICS = 2;
     public static final int MODEL_SELECT = 3;
-    public static final int MAID_MODEL = 4;
-    public static final int MAID_ACTION = 5;
     public static final int MORPH_SYNC = 6;
     public static final int REQUEST_ALL_MODELS = 10;
     public static final int STAGE_MULTI = 11;
@@ -20,11 +18,5 @@ public final class NetworkOpCode {
                 || opCode == MORPH_SYNC || opCode == REQUEST_ALL_MODELS
                 || opCode == STAGE_MULTI;
     }
-
-    
-    public static boolean isEntityStringPayload(int opCode) {
-        return opCode == MAID_MODEL || opCode == MAID_ACTION;
-    }
-
     private NetworkOpCode() {}
 }

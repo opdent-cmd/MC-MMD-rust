@@ -7,12 +7,9 @@ import com.shiroha.mmdskin.ui.selector.application.MaterialVisibilityApplication
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public interface MaterialVisibilityGateway {
     Optional<MaterialScreenContext> createPlayerContext();
-
-    Optional<MaterialScreenContext> createMaidContext(UUID maidUuid, String maidName);
 
     List<MaterialEntryState> loadMaterials(MaterialScreenContext context);
 

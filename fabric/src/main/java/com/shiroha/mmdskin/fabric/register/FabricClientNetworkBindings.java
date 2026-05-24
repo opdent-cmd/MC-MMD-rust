@@ -1,10 +1,8 @@
-/** 文件职责：集中绑定 Fabric 客户端各类网络发送器。 */
+/* 文件职责：集中绑定 Fabric 客户端各类网络发送器。 */
 package com.shiroha.mmdskin.fabric.register;
 
 import com.shiroha.mmdskin.bonesync.BoneSyncNetworkHandler;
 import com.shiroha.mmdskin.fabric.network.MmdSkinNetworkPack;
-import com.shiroha.mmdskin.maid.MaidActionNetworkHandler;
-import com.shiroha.mmdskin.maid.MaidModelNetworkHandler;
 import com.shiroha.mmdskin.player.sync.PlayerMorphSyncService;
 import com.shiroha.mmdskin.ui.network.ActionWheelNetworkHandler;
 import com.shiroha.mmdskin.ui.network.ModelSelectorNetworkHandler;
@@ -46,20 +44,6 @@ final class FabricClientNetworkBindings {
 
         PlayerModelSyncManager.setNetworkBroadcaster((playerUUID, modelName) ->
             MmdSkinNetworkPack.sendToServer(NetworkOpCode.MODEL_SELECT, playerUUID, modelName));
-
-        MaidModelNetworkHandler.getInstance().setNetworkSender((entityId, modelName) -> {
-            LocalPlayer player = minecraft.player;
-            if (player != null) {
-                MmdSkinNetworkPack.sendToServer(NetworkOpCode.MAID_MODEL, player.getUUID(), entityId, modelName);
-            }
-        });
-
-        MaidActionNetworkHandler.getInstance().setNetworkSender((entityId, animId) -> {
-            LocalPlayer player = minecraft.player;
-            if (player != null) {
-                MmdSkinNetworkPack.sendToServer(NetworkOpCode.MAID_ACTION, player.getUUID(), entityId, animId);
-            }
-        });
 
         StageNetworkHandler.setStageMultiSender(payload -> {
             LocalPlayer player = minecraft.player;

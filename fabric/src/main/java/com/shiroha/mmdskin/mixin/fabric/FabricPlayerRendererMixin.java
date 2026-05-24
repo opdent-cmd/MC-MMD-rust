@@ -1,3 +1,4 @@
+/* 文件职责：在 Fabric 生物渲染阶段识别玩家并接入 MMD 玩家渲染。 */
 package com.shiroha.mmdskin.mixin.fabric;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -6,30 +7,36 @@ import com.shiroha.mmdskin.fabric.YsmCompat;
 import com.shiroha.mmdskin.player.runtime.FirstPersonManager;
 import com.shiroha.mmdskin.renderer.integration.player.PlayerMixinDelegate;
 import com.shiroha.mmdskin.renderer.integration.player.PlayerMixinDelegate.RenderAction;
-
+import com.shiroha.mmdskin.renderer.integration.state.LivingEntityRenderStateBridge;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Fabric 玩家渲染入口，委托共享玩家渲染逻辑。 */
-@Mixin(PlayerRenderer.class)
-public abstract class FabricPlayerRendererMixin extends LivingEntityRenderer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+@Mixin(LivingEntityRenderer.class)
+public abstract class FabricPlayerRendererMixin {
+    @Inject(
+        method = "render(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    private void mmdskin$renderPlayer(LivingEntityRenderState state, PoseStack matrixStack,
+                                      MultiBufferSource vertexConsumers, int packedLight, CallbackInfo ci) {
+        if (!(state instanceof PlayerRenderState playerState)) {
+            return;
+        }
 
-    public FabricPlayerRendererMixin(EntityRendererProvider.Context ctx, PlayerModel<AbstractClientPlayer> model, float shadowRadius) {
-        super(ctx, model, shadowRadius);
-    }
+        if (!(((LivingEntityRenderStateBridge) playerState).mmdskin$getLivingEntity() instanceof AbstractClientPlayer player)) {
+            return;
+        }
 
-    @Inject(method = "render(Lnet/minecraft/client/player/AbstractClientPlayer;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", at = @At("HEAD"), cancellable = true)
-    public void onRender(AbstractClientPlayer player, float entityYaw, float tickDelta, PoseStack matrixStack,
-                         MultiBufferSource vertexConsumers, int packedLight, CallbackInfo ci) {
+        float tickDelta = ((LivingEntityRenderStateBridge) playerState).mmdskin$getTickDelta();
         Minecraft minecraft = Minecraft.getInstance();
         boolean isLocalPlayer = minecraft.player != null && minecraft.player.getUUID().equals(player.getUUID());
         if (isLocalPlayer && minecraft.options.getCameraType().isFirstPerson()
@@ -39,19 +46,12 @@ public abstract class FabricPlayerRendererMixin extends LivingEntityRenderer<Abs
         }
 
         RenderAction action = PlayerMixinDelegate.handleRender(
-                player, entityYaw, tickDelta, matrixStack, vertexConsumers, packedLight,
+                player, playerState.bodyRot, tickDelta, matrixStack, vertexConsumers, packedLight,
                 YsmCompat.isYsmActive(player));
 
         PlayerMixinDelegate.renderSceneModel(player, tickDelta, matrixStack, packedLight);
-
-        switch (action) {
-            case CANCEL -> ci.cancel();
-            case SUPER_RENDER -> {
-                ci.cancel();
-                super.render(player, entityYaw, tickDelta, matrixStack, vertexConsumers, packedLight);
-                return;
-            }
-            case FALLTHROUGH -> {  }
+        if (action == RenderAction.CANCEL) {
+            ci.cancel();
         }
     }
 }

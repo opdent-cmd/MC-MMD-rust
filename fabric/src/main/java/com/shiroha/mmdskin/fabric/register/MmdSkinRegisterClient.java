@@ -3,7 +3,6 @@ package com.shiroha.mmdskin.fabric.register;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.shiroha.mmdskin.fabric.config.ModConfigScreen;
-import com.shiroha.mmdskin.fabric.maid.MaidCompatMixinPlugin;
 import com.shiroha.mmdskin.fabric.network.MmdSkinNetworkPack;
 import com.shiroha.mmdskin.mixin.fabric.KeyMappingAccessor;
 import com.shiroha.mmdskin.renderer.integration.entity.MmdSkinRenderFactory;
@@ -33,18 +32,11 @@ public final class MmdSkinRegisterClient {
         "key.categories.mmdskin"
     );
 
-    static final KeyMapping KEY_MAID_CONFIG_WHEEL = new KeyMapping(
-        "key.mmdskin.maid_config_wheel",
-        InputConstants.Type.KEYSYM,
-        GLFW.GLFW_KEY_B,
-        "key.categories.mmdskin"
-    );
-
     static final KeyMapping[] KEY_QUICK_MODELS = new KeyMapping[4];
 
     private static final FabricClientNetworkBindings NETWORK_BINDINGS = new FabricClientNetworkBindings();
     private static final FabricClientRuntimeHooks RUNTIME_HOOKS =
-        new FabricClientRuntimeHooks(KEY_CONFIG_WHEEL, KEY_MAID_CONFIG_WHEEL, KEY_QUICK_MODELS);
+        new FabricClientRuntimeHooks(KEY_CONFIG_WHEEL, KEY_QUICK_MODELS);
 
     static {
         for (int i = 0; i < KEY_QUICK_MODELS.length; i++) {
@@ -71,9 +63,6 @@ public final class MmdSkinRegisterClient {
         });
 
         KeyBindingHelper.registerKeyBinding(KEY_CONFIG_WHEEL);
-        if (MaidCompatMixinPlugin.isMaidModLoaded()) {
-            KeyBindingHelper.registerKeyBinding(KEY_MAID_CONFIG_WHEEL);
-        }
         for (KeyMapping keyQuickModel : KEY_QUICK_MODELS) {
             KeyBindingHelper.registerKeyBinding(keyQuickModel);
         }

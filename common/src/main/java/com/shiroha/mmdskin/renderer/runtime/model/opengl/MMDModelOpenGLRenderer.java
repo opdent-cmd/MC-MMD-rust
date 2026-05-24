@@ -16,7 +16,7 @@ import com.shiroha.mmdskin.renderer.runtime.model.helper.LightingHelper;
 import com.shiroha.mmdskin.renderer.runtime.model.shared.MMDMaterial;
 import com.shiroha.mmdskin.renderer.runtime.model.shared.SubMeshDrawHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.world.entity.Entity;
 import org.apache.logging.log4j.LogManager;
@@ -126,11 +126,11 @@ final class MMDModelOpenGLRenderer {
 
     private static boolean bindActiveShader(MMDModelOpenGL target, PoseStack deliverStack) {
         if (MmdSkinClient.usingMMDShader == 0) {
-            ShaderInstance mcShader = RenderSystem.getShader();
+            CompiledShaderProgram mcShader = RenderSystem.getShader();
             if (mcShader == null) {
                 return false;
             }
-            target.shaderProgram = mcShader.getId();
+            target.shaderProgram = mcShader.getProgramId();
             target.setUniforms(mcShader, deliverStack);
             mcShader.apply();
             return true;
@@ -377,7 +377,7 @@ final class MMDModelOpenGLRenderer {
         GL46C.glBindVertexArray(0);
         RenderSystem.activeTexture(GL46C.GL_TEXTURE0);
 
-        ShaderInstance currentShader = RenderSystem.getShader();
+        CompiledShaderProgram currentShader = RenderSystem.getShader();
         if (currentShader != null) {
             currentShader.clear();
         }
@@ -394,7 +394,7 @@ final class MMDModelOpenGLRenderer {
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
         if (IrisCompat.isIrisShaderActive()) {
-            ShaderInstance irisShader = RenderSystem.getShader();
+            CompiledShaderProgram irisShader = RenderSystem.getShader();
             if (irisShader != null) {
                 target.setUniforms(irisShader, deliverStack);
                 irisShader.apply();

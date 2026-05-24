@@ -6,7 +6,6 @@ import com.shiroha.mmdskin.bridge.runtime.NativeModelPort;
 import com.shiroha.mmdskin.bridge.runtime.NativeModelQueryPort;
 import com.shiroha.mmdskin.config.ModelConfigData;
 import com.shiroha.mmdskin.config.ModelConfigManager;
-import com.shiroha.mmdskin.maid.MaidMMDModelManager;
 import com.shiroha.mmdskin.player.model.PlayerModelResolver;
 import com.shiroha.mmdskin.renderer.runtime.model.MMDModelManager;
 import com.shiroha.mmdskin.ui.config.ModelSelectorConfig;
@@ -14,7 +13,6 @@ import com.shiroha.mmdskin.ui.selector.application.MaterialVisibilityApplication
 import com.shiroha.mmdskin.ui.selector.application.MaterialVisibilityApplicationService.MaterialScreenContext;
 import com.shiroha.mmdskin.ui.selector.port.MaterialVisibilityGateway;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public class DefaultMaterialVisibilityGateway implements MaterialVisibilityGateway {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -60,20 +57,6 @@ public class DefaultMaterialVisibilityGateway implements MaterialVisibilityGatew
         }
 
         return Optional.of(new MaterialScreenContext(model.model.getModelHandle(), modelName, modelName));
-    }
-
-    @Override
-    public Optional<MaterialScreenContext> createMaidContext(UUID maidUuid, String maidName) {
-        MMDModelManager.Model model = MaidMMDModelManager.getModel(maidUuid);
-        if (model == null) {
-            LOGGER.warn("无法获取女仆模型: {}", maidUuid);
-            return Optional.empty();
-        }
-
-        String displayName = maidName != null
-                ? maidName
-                : Component.translatable("gui.mmdskin.maid.default_name").getString();
-        return Optional.of(new MaterialScreenContext(model.model.getModelHandle(), displayName, model.getModelName()));
     }
 
     @Override

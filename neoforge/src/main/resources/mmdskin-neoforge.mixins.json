@@ -7,6 +7,8 @@
   "mixins": [],
   "client": [
     "NeoForgePlayerRendererMixin",
+    "LivingEntityRenderStateMixin",
+    "LivingEntityRendererStateCaptureMixin",
     "MobReplacementLivingEntityRendererMixin",
     "compat.VivecraftVRArmHelperMixin",
     "compat.VivecraftVRPlayerRendererMixin",

@@ -18,7 +18,7 @@ import com.shiroha.mmdskin.renderer.runtime.model.AbstractMMDModel;
 import com.shiroha.mmdskin.renderer.runtime.model.MMDModelManager;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
 
 /**
@@ -63,7 +63,7 @@ final class PlayerModelRenderCoordinator {
                 InventoryRenderHelper.renderInInventory(player, model, entityYaw, tickDelta, matrixStack, packedLight, size);
             } else {
                 matrixStack.scale(size[0], size[0], size[0]);
-                RenderSystem.setShader(GameRenderer::getRendertypeEntityTranslucentShader);
+                RenderSystem.setShader(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT);
                 RenderContext context = isFirstPerson ? RenderContext.FIRST_PERSON : RenderContext.WORLD;
                 model.render(player, params.bodyYaw, params.bodyPitch, params.translation, tickDelta, matrixStack, packedLight, context);
             }

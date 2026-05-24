@@ -19,13 +19,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** LevelRenderer Mixin，用于在 MMD 第一人称与 VR 场景下决定本地玩家是否强制渲染。 */
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
-    @Inject(method = "renderLevel", at = @At("HEAD"))
+    @Inject(
+        method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+        at = @At("HEAD")
+    )
     private void mmdskin$beginRenderFrame(CallbackInfo ci) {
         PlayerPerformanceGate.beginRenderFrame();
     }
 
     @Redirect(
-        method = "renderLevel",
+        method = "collectVisibleEntities(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Ljava/util/List;)Z",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;isDetached()Z", ordinal = 0)
     )
     private boolean onCameraIsDetached(Camera camera) {

@@ -14,8 +14,7 @@ public final class MobReplacementService {
 
     public static String getReplacementModelName(LivingEntity entity) {
         if (entity == null
-            || !MobReplacementTargets.isSupported(entity.getType())
-            || isMaidEntity(entity)) {
+            || !MobReplacementTargets.isSupported(entity.getType())) {
             return null;
         }
 
@@ -30,10 +29,5 @@ public final class MobReplacementService {
         }
 
         return ModelInfo.findByFolderName(modelName) != null ? modelName : null;
-    }
-
-    private static boolean isMaidEntity(LivingEntity entity) {
-        String className = entity.getClass().getName();
-        return className.contains("EntityMaid") || className.contains("touhoulittlemaid");
     }
 }

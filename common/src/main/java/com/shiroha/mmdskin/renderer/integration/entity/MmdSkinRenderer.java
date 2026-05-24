@@ -1,15 +1,16 @@
+/* 文件职责：将原版实体渲染接入 MMD 模型运行时。 */
 package com.shiroha.mmdskin.renderer.integration.entity;
 
-import com.shiroha.mmdskin.renderer.integration.player.InventoryRenderHelper;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.shiroha.mmdskin.MmdSkin;
 import com.shiroha.mmdskin.renderer.api.RenderContext;
 import com.shiroha.mmdskin.renderer.api.RenderParams;
 import com.shiroha.mmdskin.renderer.integration.ModelPropertyHelper;
+import com.shiroha.mmdskin.renderer.integration.player.InventoryRenderHelper;
 import com.shiroha.mmdskin.renderer.runtime.model.MMDModelManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -19,10 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-/**
- * MMD 自定义实体渲染器。
- */
-public class MmdSkinRenderer<T extends Entity> extends EntityRenderer<T> {
+public class MmdSkinRenderer<T extends Entity> extends EntityRenderer<T, MmdEntityRenderState> {
 
     private static final ResourceLocation PLACEHOLDER_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(MmdSkin.MOD_ID, "textures/entity/placeholder.png");
@@ -40,56 +38,82 @@ public class MmdSkinRenderer<T extends Entity> extends EntityRenderer<T> {
     }
 
     @Override
-    public void render(T entityIn, float entityYaw, float tickDelta, PoseStack matrixStackIn,
-                       MultiBufferSource bufferIn, int packedLightIn) {
-        super.render(entityIn, entityYaw, tickDelta, matrixStackIn, bufferIn, packedLightIn);
-        MMDModelManager.Model model = MMDModelManager.GetModel(modelName, entityIn.getStringUUID());
-        if (model == null) return;
+    public MmdEntityRenderState createRenderState() {
+        return new MmdEntityRenderState();
+    }
+
+    @Override
+    public void extractRenderState(T entity, MmdEntityRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        state.entity = entity;
+        state.entityYaw = entity.getYRot();
+        state.tickDelta = partialTick;
+    }
+
+    @Override
+    public void render(MmdEntityRenderState state, PoseStack poseStack,
+                       MultiBufferSource bufferSource, int packedLight) {
+        @SuppressWarnings("unchecked")
+        T entity = (T) state.entity;
+        if (entity == null) {
+            return;
+        }
+
+        MMDModelManager.Model model = MMDModelManager.GetModel(modelName, entity.getStringUUID());
+        if (model == null) {
+            super.render(state, poseStack, bufferSource, packedLight);
+            return;
+        }
 
         model.loadModelProperties(false);
         float[] size = parseModelSize(model, reusableSize);
 
         reusableParams.reset();
-        EntityAnimationResolver.resolve(entityIn, model, entityYaw, tickDelta, reusableParams);
+        EntityAnimationResolver.resolve(entity, model, state.entityYaw, state.tickDelta, reusableParams);
 
-        matrixStackIn.pushPose();
+        poseStack.pushPose();
+        try {
+            if (entity instanceof LivingEntity living && living.isBaby()) {
+                poseStack.scale(0.5f, 0.5f, 0.5f);
+            }
 
-        if (entityIn instanceof LivingEntity living && living.isBaby()) {
-            matrixStackIn.scale(0.5f, 0.5f, 0.5f);
+            if (InventoryRenderHelper.isInventoryScreen()) {
+                renderInInventory(entity, model, state.entityYaw, state.tickDelta, poseStack, packedLight, size);
+            } else {
+                poseStack.scale(size[0], size[0], size[0]);
+                RenderSystem.setShader(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL);
+                model.model.render(entity, reusableParams.bodyYaw, reusableParams.bodyPitch, reusableParams.translation,
+                        state.tickDelta, poseStack, packedLight, RenderContext.WORLD);
+            }
+        } finally {
+            poseStack.popPose();
         }
 
-        if (InventoryRenderHelper.isInventoryScreen()) {
-            renderInInventory(entityIn, model, entityYaw, tickDelta, matrixStackIn, packedLightIn, size);
-        } else {
-            matrixStackIn.scale(size[0], size[0], size[0]);
-            RenderSystem.setShader(GameRenderer::getRendertypeEntityCutoutNoCullShader);
-            model.model.render(entityIn, reusableParams.bodyYaw, reusableParams.bodyPitch, reusableParams.translation,
-                             tickDelta, matrixStackIn, packedLightIn, RenderContext.WORLD);
-        }
-
-        matrixStackIn.popPose();
+        super.render(state, poseStack, bufferSource, packedLight);
     }
 
-    private void renderInInventory(T entityIn, MMDModelManager.Model model, float entityYaw,
-                                    float tickDelta, PoseStack matrixStack, int packedLight, float[] size) {
+    private void renderInInventory(T entity, MMDModelManager.Model model, float entityYaw,
+                                   float tickDelta, PoseStack poseStack, int packedLight, float[] size) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen == null) return;
+        if (mc.screen == null) {
+            return;
+        }
 
-        matrixStack.pushPose();
-        matrixStack.scale(20.0f, 20.0f, -20.0f);
-        matrixStack.scale(size[1], size[1], size[1]);
+        poseStack.pushPose();
+        poseStack.scale(20.0f, 20.0f, -20.0f);
+        poseStack.scale(size[1], size[1], size[1]);
 
         reusableQuat.identity()
                 .rotateZ((float) Math.PI)
-                .rotateX(-entityIn.getXRot() * ((float) Math.PI / 180F))
-                .rotateY(-entityIn.getYRot() * ((float) Math.PI / 180F));
-        matrixStack.mulPose(reusableQuat);
+                .rotateX(-entity.getXRot() * ((float) Math.PI / 180F))
+                .rotateY(-entity.getYRot() * ((float) Math.PI / 180F));
+        poseStack.mulPose(reusableQuat);
 
-        RenderSystem.setShader(GameRenderer::getRendertypeEntityCutoutNoCullShader);
+        RenderSystem.setShader(CoreShaders.RENDERTYPE_ENTITY_CUTOUT_NO_CULL);
         reusableVec.set(0.0f);
-        model.model.render(entityIn, entityYaw, 0.0f, reusableVec,
-                          tickDelta, matrixStack, packedLight, RenderContext.INVENTORY);
-        matrixStack.popPose();
+        model.model.render(entity, entityYaw, 0.0f, reusableVec,
+                tickDelta, poseStack, packedLight, RenderContext.INVENTORY);
+        poseStack.popPose();
     }
 
     private static float[] parseModelSize(MMDModelManager.Model model, float[] out) {
@@ -99,8 +123,7 @@ public class MmdSkinRenderer<T extends Entity> extends EntityRenderer<T> {
         return out;
     }
 
-    @Override
-    public ResourceLocation getTextureLocation(T entity) {
+    public ResourceLocation getTextureLocation(MmdEntityRenderState state) {
         return PLACEHOLDER_TEXTURE;
     }
 }

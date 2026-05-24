@@ -5,7 +5,7 @@ plugins {
 }
 
 architectury {
-	minecraft = '1.21.1'
+	minecraft = '1.21.2'
 }
 
 allprojects {
@@ -13,7 +13,7 @@ allprojects {
 	apply plugin: 'architectury-plugin'
 	
 	group = maven_group
-	version = '1.0.5-1.21.1-2'
+	version = '1.0.5-1.21.2-2'
 	
 	repositories {
 		maven { url = 'https://maven.architectury.dev/' }
@@ -83,7 +83,7 @@ subprojects {
 	}
 	
 	dependencies {
-		minecraft "com.mojang:minecraft:1.21.1"
+		minecraft "com.mojang:minecraft:1.21.2"
 		mappings loom.officialMojangMappings()
 	}
 	

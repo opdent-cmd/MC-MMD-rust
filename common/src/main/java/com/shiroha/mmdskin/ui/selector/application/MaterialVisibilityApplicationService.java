@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public class MaterialVisibilityApplicationService {
     private final MaterialVisibilityGateway gateway;
@@ -20,10 +19,6 @@ public class MaterialVisibilityApplicationService {
 
     public Optional<MaterialScreenContext> createPlayerContext() {
         return gateway.createPlayerContext();
-    }
-
-    public Optional<MaterialScreenContext> createMaidContext(UUID maidUuid, String maidName) {
-        return gateway.createMaidContext(maidUuid, maidName);
     }
 
     public List<MaterialEntryState> loadMaterials(MaterialScreenContext context) {
@@ -54,13 +49,6 @@ public class MaterialVisibilityApplicationService {
         boolean visible = !material.visible();
         material.setVisible(visible);
         gateway.setMaterialVisible(context.modelHandle(), material.index(), visible);
-    }
-
-    public void save(MaterialScreenContext context, List<MaterialEntryState> materials) {
-        if (context.configModelName() == null || context.configModelName().isEmpty()) {
-            return;
-        }
-        gateway.saveHiddenMaterials(context.configModelName(), snapshotHiddenMaterials(materials));
     }
 
     public boolean saveIfChanged(MaterialScreenContext context,

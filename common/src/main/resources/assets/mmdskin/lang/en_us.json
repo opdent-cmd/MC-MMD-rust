@@ -1,10 +1,7 @@
 {
   "key.categories.mmdskin": "MMD Skin",
   "key.mmdskin.config_wheel": "Config Wheel",
-  "key.mmdskin.maid_config_wheel": "Maid Config Wheel",
-  
   "gui.mmdskin.config_wheel": "Config Wheel",
-  "gui.mmdskin.maid_config_wheel": "Maid Config",
   "gui.mmdskin.config.model_switch": "Model Switch",
   "gui.mmdskin.config.action_select": "Action Select",
   "gui.mmdskin.config.material_control": "Material Control",
@@ -12,11 +9,6 @@
   "gui.mmdskin.config.scene_mode": "Scene Place",
   "gui.mmdskin.config.stage_mode": "Stage Mode",
   "gui.mmdskin.config.mod_settings": "Mod Settings",
-  "gui.mmdskin.maid.model_switch": "Model Switch",
-  "gui.mmdskin.maid.action_select": "Action Select",
-  "gui.mmdskin.maid.material_control": "Material Control",
-  "gui.mmdskin.maid_action_wheel": "Maid Action Wheel",
-  
   "gui.mmdskin.mod_settings.title": "MMD Skin - Settings",
   "gui.mmdskin.mod_settings.category.render": "Render Settings",
   "gui.mmdskin.mod_settings.category.performance": "Performance Settings",
@@ -91,7 +83,6 @@
   "gui.mmdskin.action_wheel": "Action Wheel",
   "gui.mmdskin.select_action": "Select Action",
   "gui.mmdskin.model_selector": "Model Selector",
-  "gui.mmdskin.maid_model_selector": "Maid MMD Model Selector",
   "gui.mmdskin.action_config": "Action Wheel Config",
   "gui.mmdskin.rescan": "Rescan",
   
@@ -190,12 +181,10 @@
   "gui.mmdskin.material_visibility.off": "OFF",
   "gui.mmdskin.material_visibility.invert": "Invert",
   "gui.mmdskin.material_visibility.unnamed": "(Unnamed)",
-  "gui.mmdskin.maid.default_name": "Maid",
   "gui.mmdskin.morph_wheel.select": "Select Expression",
   "gui.mmdskin.morph_wheel.no_morphs": "No expressions available",
   "gui.mmdskin.action_wheel.click_select": "◆ Click to select",
   "gui.mmdskin.action_wheel.no_actions": "No actions configured, click ⚙ to configure",
-  "gui.mmdskin.maid_action_wheel.no_actions": "No actions configured",
   "gui.mmdskin.config.stats": "Available: %s  |  Selected: %s",
   "gui.mmdskin.config.click_add": "← Click to add",
   "gui.mmdskin.config.click_remove": "Click to remove →",
@@ -209,7 +198,6 @@
   "gui.mmdskin.source.builtin": "Builtin",
   "gui.mmdskin.source.model": "Model",
   "gui.mmdskin.source.model_exclusive": "Model Exclusive",
-  "message.mmdskin.maid.model_not_found": "§cMaid model not found. Please select an MMD model for the maid first.",
   "message.mmdskin.player.model_not_found": "§cPlayer model not found. Please select an MMD model first.",
   "message.mmdskin.mod_settings.not_initialized": "§cMod settings screen not initialized",
 

@@ -1,4 +1,4 @@
-/** 文件职责：承接 NeoForge 客户端事件并执行业务运行时钩子。 */
+/** 文件职责：承接 NeoForge 客户端事件并执行运行时钩子。 */
 package com.shiroha.mmdskin.neoforge.register;
 
 import com.shiroha.mmdskin.bonesync.BoneSyncManager;
@@ -15,13 +15,9 @@ import com.shiroha.mmdskin.ui.config.ModelSelectorConfig;
 import com.shiroha.mmdskin.ui.network.NetworkOpCode;
 import com.shiroha.mmdskin.ui.network.PlayerModelSyncManager;
 import com.shiroha.mmdskin.ui.wheel.ConfigWheelScreen;
-import com.shiroha.mmdskin.ui.wheel.MaidConfigWheelScreen;
 import java.util.UUID;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -32,15 +28,12 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 final class NeoForgeClientRuntimeHooks {
     private final KeyMapping keyConfigWheel;
-    private final KeyMapping keyMaidConfigWheel;
     private final KeyMapping[] keyQuickModels;
 
     private boolean configWheelKeyWasDown;
-    private boolean maidConfigWheelKeyWasDown;
 
-    NeoForgeClientRuntimeHooks(KeyMapping keyConfigWheel, KeyMapping keyMaidConfigWheel, KeyMapping[] keyQuickModels) {
+    NeoForgeClientRuntimeHooks(KeyMapping keyConfigWheel, KeyMapping[] keyQuickModels) {
         this.keyConfigWheel = keyConfigWheel;
-        this.keyMaidConfigWheel = keyMaidConfigWheel;
         this.keyQuickModels = keyQuickModels;
     }
 
@@ -71,16 +64,6 @@ final class NeoForgeClientRuntimeHooks {
                     QuickModelSwitcher.switchToSlot(i);
                 }
             }
-        }
-
-        if (minecraft.screen == null || minecraft.screen instanceof MaidConfigWheelScreen) {
-            boolean keyDown = keyMaidConfigWheel.isDown();
-            if (keyDown && !maidConfigWheelKeyWasDown) {
-                tryOpenMaidConfigWheel(minecraft);
-            }
-            maidConfigWheelKeyWasDown = keyDown;
-        } else {
-            maidConfigWheelKeyWasDown = false;
         }
     }
 
@@ -132,24 +115,6 @@ final class NeoForgeClientRuntimeHooks {
         MMDCameraController controller = MMDCameraController.getInstance();
         if (controller.isInStageMode()) {
             controller.exitStageMode();
-        }
-    }
-
-    private void tryOpenMaidConfigWheel(Minecraft minecraft) {
-        HitResult hitResult = minecraft.hitResult;
-        if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
-            return;
-        }
-
-        Entity target = ((EntityHitResult) hitResult).getEntity();
-        String className = target.getClass().getName();
-        if (className.contains("EntityMaid") || className.contains("touhoulittlemaid")) {
-            minecraft.setScreen(new MaidConfigWheelScreen(
-                target.getUUID(),
-                target.getId(),
-                target.getName().getString(),
-                keyMaidConfigWheel
-            ));
         }
     }
 }

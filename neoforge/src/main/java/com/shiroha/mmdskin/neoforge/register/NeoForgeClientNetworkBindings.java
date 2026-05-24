@@ -2,8 +2,6 @@
 package com.shiroha.mmdskin.neoforge.register;
 
 import com.shiroha.mmdskin.bonesync.BoneSyncNetworkHandler;
-import com.shiroha.mmdskin.maid.MaidActionNetworkHandler;
-import com.shiroha.mmdskin.maid.MaidModelNetworkHandler;
 import com.shiroha.mmdskin.neoforge.network.MmdSkinNetworkPack;
 import com.shiroha.mmdskin.player.sync.PlayerMorphSyncService;
 import com.shiroha.mmdskin.ui.network.ActionWheelNetworkHandler;
@@ -56,20 +54,6 @@ final class NeoForgeClientNetworkBindings {
 
         PlayerModelSyncManager.setNetworkBroadcaster((playerUUID, modelName) ->
             PacketDistributor.sendToServer(MmdSkinNetworkPack.withAnimId(NetworkOpCode.MODEL_SELECT, playerUUID, modelName)));
-
-        MaidModelNetworkHandler.getInstance().setNetworkSender((entityId, modelName) -> {
-            LocalPlayer player = minecraft.player;
-            if (player != null) {
-                PacketDistributor.sendToServer(MmdSkinNetworkPack.forMaid(NetworkOpCode.MAID_MODEL, player.getUUID(), entityId, modelName));
-            }
-        });
-
-        MaidActionNetworkHandler.getInstance().setNetworkSender((entityId, animId) -> {
-            LocalPlayer player = minecraft.player;
-            if (player != null) {
-                PacketDistributor.sendToServer(MmdSkinNetworkPack.forMaid(NetworkOpCode.MAID_ACTION, player.getUUID(), entityId, animId));
-            }
-        });
 
         StageNetworkHandler.setStageMultiSender(payload -> {
             LocalPlayer player = minecraft.player;

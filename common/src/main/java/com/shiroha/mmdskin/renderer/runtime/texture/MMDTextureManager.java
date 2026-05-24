@@ -21,6 +21,8 @@ import org.lwjgl.system.MemoryUtil;
  */
 public class MMDTextureManager {
     private static final Logger logger = LogManager.getLogger();
+    private static final int RGB_CHANNELS = 3;
+    private static final int RGBA_CHANNELS = 4;
     private static NativeFunc nf;
 
     private static volatile Map<String, Texture> textures;
@@ -28,6 +30,7 @@ public class MMDTextureManager {
     private static final Map<String, Texture> pendingRelease = new ConcurrentHashMap<>();
 
     private static final Map<String, PredecodedTexture> predecodedTextures = new ConcurrentHashMap<>();
+    private static final Object predecodedTextureLock = new Object();
 
     private static final long TEXTURE_TTL_MS = 60_000;
 
@@ -67,7 +70,10 @@ public class MMDTextureManager {
             long texData = localNf.GetTextureData(nfTex);
             boolean hasAlpha = localNf.TextureHasAlpha(nfTex);
 
-            int texSize = x * y * (hasAlpha ? 4 : 3);
+            int texSize = validateTextureSize(filename, x, y, hasAlpha);
+            if (texSize <= 0) {
+                return;
+            }
             ByteBuffer pixelBuffer = MemoryUtil.memAlloc(texSize);
             localNf.CopyDataToByteBuffer(pixelBuffer, texData, texSize);
             pixelBuffer.rewind();
@@ -78,9 +84,11 @@ public class MMDTextureManager {
             predecoded.height = y;
             predecoded.hasAlpha = hasAlpha;
 
-            PredecodedTexture existing = predecodedTextures.putIfAbsent(filename, predecoded);
-            if (existing != null) {
-                MemoryUtil.memFree(pixelBuffer);
+            synchronized (predecodedTextureLock) {
+                PredecodedTexture existing = predecodedTextures.putIfAbsent(filename, predecoded);
+                if (existing != null) {
+                    MemoryUtil.memFree(pixelBuffer);
+                }
             }
         } finally {
             localNf.DeleteTexture(nfTex);
@@ -89,18 +97,24 @@ public class MMDTextureManager {
 
     public static void clearPreloaded() {
 
-        for (PredecodedTexture p : predecodedTextures.values()) {
-            if (p.pixelData != null) {
-                MemoryUtil.memFree(p.pixelData);
-                p.pixelData = null;
+        synchronized (predecodedTextureLock) {
+            for (PredecodedTexture p : predecodedTextures.values()) {
+                if (p.pixelData != null) {
+                    MemoryUtil.memFree(p.pixelData);
+                    p.pixelData = null;
+                }
             }
+            predecodedTextures.clear();
         }
-        predecodedTextures.clear();
     }
 
     public static Texture GetTexture(String filename) {
+        Map<String, Texture> localTextures = textures;
+        if (localTextures == null) {
+            return null;
+        }
 
-        Texture result = textures.get(filename);
+        Texture result = localTextures.get(filename);
         if (result != null) {
             return result;
         }
@@ -108,14 +122,16 @@ public class MMDTextureManager {
         result = pendingRelease.remove(filename);
         if (result != null) {
             result.refCount.set(0);
-            textures.put(filename, result);
+            localTextures.put(filename, result);
             return result;
         }
 
-        PredecodedTexture predecoded = predecodedTextures.remove(filename);
+        PredecodedTexture predecoded = takePredecodedTexture(filename);
         if (predecoded != null) {
-            result = uploadPredecodedTexture(predecoded);
-            textures.put(filename, result);
+            result = uploadPredecodedTexture(filename, predecoded);
+            if (result != null) {
+                localTextures.put(filename, result);
+            }
             return result;
         }
 
@@ -128,70 +144,154 @@ public class MMDTextureManager {
         int y = localNf.GetTextureY(nfTex);
         long texData = localNf.GetTextureData(nfTex);
         boolean hasAlpha = localNf.TextureHasAlpha(nfTex);
+        int texSize = validateTextureSize(filename, x, y, hasAlpha);
+        if (texSize <= 0) {
+            localNf.DeleteTexture(nfTex);
+            return null;
+        }
 
-        int tex = GL46C.glGenTextures();
-        GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, tex);
-        int texSize = x * y * (hasAlpha ? 4 : 3);
         ByteBuffer texBuffer = MemoryUtil.memAlloc(texSize);
         try {
             localNf.CopyDataToByteBuffer(texBuffer, texData, texSize);
             texBuffer.rewind();
-            if (hasAlpha) {
-                GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, 4);
-                GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGBA, x, y, 0, GL46C.GL_RGBA, GL46C.GL_UNSIGNED_BYTE, texBuffer);
-            } else {
-                GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, 1);
-                GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGB, x, y, 0, GL46C.GL_RGB, GL46C.GL_UNSIGNED_BYTE, texBuffer);
-            }
+            result = createTextureFromPixels(filename, x, y, hasAlpha, texBuffer, texSize);
         } finally {
             MemoryUtil.memFree(texBuffer);
+            localNf.DeleteTexture(nfTex);
         }
-        localNf.DeleteTexture(nfTex);
-
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAX_LEVEL, 0);
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MIN_FILTER, GL46C.GL_LINEAR);
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAG_FILTER, GL46C.GL_LINEAR);
-        GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, 0);
-
-        result = new Texture();
-        result.tex = tex;
-        result.hasAlpha = hasAlpha;
-        result.vramSize = (long) x * y * (hasAlpha ? 4 : 3);
-        textures.put(filename, result);
+        if (result != null) {
+            localTextures.put(filename, result);
+        }
         return result;
     }
 
-    private static Texture uploadPredecodedTexture(PredecodedTexture predecoded) {
-        int tex = GL46C.glGenTextures();
-        GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, tex);
+    private static Texture uploadPredecodedTexture(String filename, PredecodedTexture predecoded) {
+        try {
+            int texSize = validateTextureSize(filename, predecoded.width, predecoded.height, predecoded.hasAlpha);
+            if (texSize <= 0) {
+                return null;
+            }
+            return createTextureFromPixels(
+                filename,
+                predecoded.width,
+                predecoded.height,
+                predecoded.hasAlpha,
+                predecoded.pixelData,
+                texSize
+            );
+        } finally {
+            if (predecoded.pixelData != null) {
+                MemoryUtil.memFree(predecoded.pixelData);
+                predecoded.pixelData = null;
+            }
+        }
+    }
 
-        if (predecoded.hasAlpha) {
-            GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, 4);
-            GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGBA,
-                predecoded.width, predecoded.height, 0,
-                GL46C.GL_RGBA, GL46C.GL_UNSIGNED_BYTE, predecoded.pixelData);
-        } else {
-            GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, 1);
-            GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGB,
-                predecoded.width, predecoded.height, 0,
-                GL46C.GL_RGB, GL46C.GL_UNSIGNED_BYTE, predecoded.pixelData);
+    private static PredecodedTexture takePredecodedTexture(String filename) {
+        synchronized (predecodedTextureLock) {
+            return predecodedTextures.remove(filename);
+        }
+    }
+
+    private static Texture createTextureFromPixels(String filename,
+                                                   int width,
+                                                   int height,
+                                                   boolean hasAlpha,
+                                                   ByteBuffer pixelData,
+                                                   int expectedSize) {
+        ByteBuffer uploadView = prepareUploadView(filename, pixelData, expectedSize);
+        if (uploadView == null) {
+            return null;
         }
 
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAX_LEVEL, 0);
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MIN_FILTER, GL46C.GL_LINEAR);
-        GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAG_FILTER, GL46C.GL_LINEAR);
-        GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, 0);
-
-        if (predecoded.pixelData != null) {
-            MemoryUtil.memFree(predecoded.pixelData);
-            predecoded.pixelData = null;
+        int tex = GL46C.glGenTextures();
+        try {
+            GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, tex);
+            configureUnpackState(hasAlpha);
+            uploadTexturePixels(width, height, hasAlpha, uploadView);
+            GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAX_LEVEL, 0);
+            GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MIN_FILTER, GL46C.GL_LINEAR);
+            GL46C.glTexParameteri(GL46C.GL_TEXTURE_2D, GL46C.GL_TEXTURE_MAG_FILTER, GL46C.GL_LINEAR);
+        } catch (RuntimeException e) {
+            GL46C.glDeleteTextures(tex);
+            logger.error("纹理上传失败: {}", filename, e);
+            return null;
+        } finally {
+            resetUnpackState();
+            GL46C.glBindTexture(GL46C.GL_TEXTURE_2D, 0);
         }
 
         Texture result = new Texture();
         result.tex = tex;
-        result.hasAlpha = predecoded.hasAlpha;
-        result.vramSize = (long) predecoded.width * predecoded.height * (predecoded.hasAlpha ? 4 : 3);
+        result.hasAlpha = hasAlpha;
+        result.vramSize = (long) expectedSize;
         return result;
+    }
+
+    private static ByteBuffer prepareUploadView(String filename, ByteBuffer pixelData, int expectedSize) {
+        if (pixelData == null) {
+            logger.warn("纹理像素缓冲区为空: {}", filename);
+            return null;
+        }
+        if (!pixelData.isDirect()) {
+            logger.warn("纹理像素缓冲区不是 direct buffer: {}", filename);
+            return null;
+        }
+        if (pixelData.capacity() < expectedSize) {
+            logger.warn("纹理像素缓冲区容量不足: {} expected={} actual={}", filename, expectedSize, pixelData.capacity());
+            return null;
+        }
+
+        ByteBuffer uploadView = pixelData.duplicate();
+        uploadView.clear();
+        uploadView.limit(expectedSize);
+        return uploadView;
+    }
+
+    private static void configureUnpackState(boolean hasAlpha) {
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, hasAlpha ? RGBA_CHANNELS : 1);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_ROW_LENGTH, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_ROWS, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_PIXELS, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_IMAGE_HEIGHT, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_IMAGES, 0);
+    }
+
+    private static void resetUnpackState() {
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_ALIGNMENT, RGBA_CHANNELS);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_ROW_LENGTH, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_ROWS, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_PIXELS, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_IMAGE_HEIGHT, 0);
+        GL46C.glPixelStorei(GL46C.GL_UNPACK_SKIP_IMAGES, 0);
+    }
+
+    private static void uploadTexturePixels(int width, int height, boolean hasAlpha, ByteBuffer uploadView) {
+        if (hasAlpha) {
+            GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGBA, width, height, 0,
+                GL46C.GL_RGBA, GL46C.GL_UNSIGNED_BYTE, uploadView);
+            return;
+        }
+
+        GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGB, width, height, 0,
+            GL46C.GL_RGB, GL46C.GL_UNSIGNED_BYTE, uploadView);
+    }
+
+    private static int validateTextureSize(String filename, int width, int height, boolean hasAlpha) {
+        if (width <= 0 || height <= 0) {
+            logger.warn("纹理尺寸非法: {} width={} height={}", filename, width, height);
+            return -1;
+        }
+
+        long channelCount = hasAlpha ? RGBA_CHANNELS : RGB_CHANNELS;
+        long textureBytes = (long) width * height * channelCount;
+        if (textureBytes <= 0 || textureBytes > Integer.MAX_VALUE) {
+            logger.warn("纹理字节数非法: {} width={} height={} channels={} bytes={}",
+                filename, width, height, channelCount, textureBytes);
+            return -1;
+        }
+
+        return (int) textureBytes;
     }
 
     public static void addRef(String filename) {

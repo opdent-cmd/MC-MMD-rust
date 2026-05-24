@@ -12,7 +12,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.world.entity.Entity;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -548,7 +548,7 @@ public class MMDModelGpuSkinning extends AbstractMMDModel {
         I_colorLocation = GlStateManager._glGetAttribLocation(program, "iris_Color");
     }
 
-    void setUniforms(ShaderInstance shader, PoseStack deliverStack) {
+    void setUniforms(CompiledShaderProgram shader, PoseStack deliverStack) {
         setupShaderUniforms(shader, deliverStack, light0Direction, light1Direction, lightMapMaterial.tex);
     }
 

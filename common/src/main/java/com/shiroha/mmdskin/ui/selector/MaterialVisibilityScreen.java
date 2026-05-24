@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class MaterialVisibilityScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -62,10 +61,6 @@ public class MaterialVisibilityScreen extends Screen {
 
     public static MaterialVisibilityScreen createForPlayer() {
         return SERVICE.createPlayerContext().map(MaterialVisibilityScreen::new).orElse(null);
-    }
-
-    public static MaterialVisibilityScreen createForMaid(UUID maidUUID, String maidName) {
-        return SERVICE.createMaidContext(maidUUID, maidName).map(MaterialVisibilityScreen::new).orElse(null);
     }
 
     @Override

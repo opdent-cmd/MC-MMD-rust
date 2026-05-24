@@ -13,7 +13,6 @@ import com.shiroha.mmdskin.renderer.runtime.model.loading.ModelPropertiesLoader;
 import com.shiroha.mmdskin.renderer.runtime.mode.RenderModeManager;
 import com.shiroha.mmdskin.renderer.runtime.model.factory.ModelFactoryRegistry;
 import com.shiroha.mmdskin.renderer.runtime.texture.MMDTextureManager;
-import com.shiroha.mmdskin.maid.MaidMMDModelManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -114,7 +113,6 @@ public class MMDModelManager {
     public static void forceReloadAllModels() {
         cancelAllPendingLoads();
         modelCache.clear(MMDModelManager::disposeModel);
-        MaidMMDModelManager.invalidateLoadedModels();
         MMDTextureManager.clearPreloaded();
     }
 
@@ -169,7 +167,6 @@ public class MMDModelManager {
     public static void ReloadModel() {
         cancelAllPendingLoads();
         modelCache.clear(MMDModelManager::disposeModel);
-        MaidMMDModelManager.invalidateLoadedModels();
         MMDTextureManager.clearPreloaded();
     }
 
@@ -201,20 +198,11 @@ public class MMDModelManager {
                 }
             });
         }
-        for (Model m : com.shiroha.mmdskin.maid.MaidMMDModelManager.getLoadedMaidModels()) {
-            if (m != null && m.model != null) {
-                long handle = m.model.getModelHandle();
-                if (handle != 0 && seen.add(handle)) {
-                    result.add(m);
-                }
-            }
-        }
         return result;
     }
 
     private static void disposeModel(Model model) {
         try {
-            MaidMMDModelManager.onModelDisposed(model);
             model.model.dispose();
             MMDAnimManager.DeleteModel(model.model);
             if (model.entityData != null) {

@@ -11,7 +11,7 @@ import com.shiroha.mmdskin.ui.chrome.TranslucentTrayChrome;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -163,7 +163,7 @@ public abstract class AbstractWheelScreen extends Screen {
         Matrix4f matrix = guiGraphics.pose().last().pose();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
         double segmentAngle = 360.0 / count;
         drawFilledSegment(matrix, selectedSlot, segmentAngle, style.highlightColor());
@@ -204,7 +204,7 @@ public abstract class AbstractWheelScreen extends Screen {
         Matrix4f matrix = guiGraphics.pose().last().pose();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
         double segmentAngle = 360.0 / count;
         for (int i = 0; i < count; i++) {
@@ -230,7 +230,7 @@ public abstract class AbstractWheelScreen extends Screen {
         Matrix4f matrix = guiGraphics.pose().last().pose();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
         int red = red(style.lineColorDim());
         int green = green(style.lineColorDim());
@@ -258,7 +258,7 @@ public abstract class AbstractWheelScreen extends Screen {
         Matrix4f matrix = guiGraphics.pose().last().pose();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
 
         int bgRed = red(style.centerBg());
         int bgGreen = green(style.centerBg());
@@ -561,7 +561,7 @@ public abstract class AbstractWheelScreen extends Screen {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
         Matrix4f matrix = guiGraphics.pose().last().pose();
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i <= segments; i++) {
@@ -588,7 +588,7 @@ public abstract class AbstractWheelScreen extends Screen {
     ) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
         Matrix4f matrix = guiGraphics.pose().last().pose();
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         addVertex(bufferBuilder, matrix, ax, ay, color);

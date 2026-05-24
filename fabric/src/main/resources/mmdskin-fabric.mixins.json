@@ -7,6 +7,8 @@
   "mixins": [],
   "client": [
     "FabricPlayerRendererMixin",
+    "LivingEntityRenderStateMixin",
+    "LivingEntityRendererStateCaptureMixin",
     "MobReplacementLivingEntityRendererMixin",
     "compat.VivecraftVRArmHelperMixin",
     "compat.VivecraftVRPlayerRendererMixin",

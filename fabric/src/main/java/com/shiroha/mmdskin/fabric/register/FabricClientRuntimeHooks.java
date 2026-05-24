@@ -1,10 +1,9 @@
-/** 文件职责：注册 Fabric 客户端生命周期、HUD 与按键运行时钩子。 */
+/* 文件职责：注册 Fabric 客户端生命周期、HUD 与按键运行时钩子。 */
 package com.shiroha.mmdskin.fabric.register;
 
 import com.shiroha.mmdskin.bonesync.BoneSyncManager;
 import com.shiroha.mmdskin.config.UIConstants;
 import com.shiroha.mmdskin.debug.client.PerformanceHud;
-import com.shiroha.mmdskin.fabric.maid.MaidCompatMixinPlugin;
 import com.shiroha.mmdskin.fabric.network.MmdSkinNetworkPack;
 import com.shiroha.mmdskin.player.runtime.MmdSkinRendererPlayerHelper;
 import com.shiroha.mmdskin.renderer.runtime.model.MMDModelManager;
@@ -16,28 +15,21 @@ import com.shiroha.mmdskin.ui.config.ModelSelectorConfig;
 import com.shiroha.mmdskin.ui.network.NetworkOpCode;
 import com.shiroha.mmdskin.ui.network.PlayerModelSyncManager;
 import com.shiroha.mmdskin.ui.wheel.ConfigWheelScreen;
-import com.shiroha.mmdskin.ui.wheel.MaidConfigWheelScreen;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 
 final class FabricClientRuntimeHooks {
     private final KeyMapping keyConfigWheel;
-    private final KeyMapping keyMaidConfigWheel;
     private final KeyMapping[] keyQuickModels;
 
     private boolean configWheelKeyWasDown;
-    private boolean maidConfigWheelKeyWasDown;
 
-    FabricClientRuntimeHooks(KeyMapping keyConfigWheel, KeyMapping keyMaidConfigWheel, KeyMapping[] keyQuickModels) {
+    FabricClientRuntimeHooks(KeyMapping keyConfigWheel, KeyMapping[] keyQuickModels) {
         this.keyConfigWheel = keyConfigWheel;
-        this.keyMaidConfigWheel = keyMaidConfigWheel;
         this.keyQuickModels = keyQuickModels;
     }
 
@@ -82,18 +74,6 @@ final class FabricClientRuntimeHooks {
                 }
             }
         }
-
-        if (MaidCompatMixinPlugin.isMaidModLoaded()) {
-            if (minecraft.screen == null || minecraft.screen instanceof MaidConfigWheelScreen) {
-                boolean keyDown = keyMaidConfigWheel.isDown();
-                if (keyDown && !maidConfigWheelKeyWasDown) {
-                    tryOpenMaidConfigWheel(minecraft);
-                }
-                maidConfigWheelKeyWasDown = keyDown;
-            } else {
-                maidConfigWheelKeyWasDown = false;
-            }
-        }
     }
 
     private void onJoin(Minecraft minecraft) {
@@ -117,23 +97,5 @@ final class FabricClientRuntimeHooks {
         MmdSkinRendererPlayerHelper.onDisconnect();
         BoneSyncManager.onDisconnect();
         StageSessionService.getInstance().onDisconnect();
-    }
-
-    private void tryOpenMaidConfigWheel(Minecraft minecraft) {
-        HitResult hitResult = minecraft.hitResult;
-        if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
-            return;
-        }
-
-        Entity target = ((EntityHitResult) hitResult).getEntity();
-        String className = target.getClass().getName();
-        if (className.contains("EntityMaid") || className.contains("touhoulittlemaid")) {
-            minecraft.setScreen(new MaidConfigWheelScreen(
-                target.getUUID(),
-                target.getId(),
-                target.getName().getString(),
-                keyMaidConfigWheel
-            ));
-        }
     }
 }

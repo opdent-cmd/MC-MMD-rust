@@ -10,7 +10,7 @@ import com.shiroha.mmdskin.renderer.api.RenderContext;
 import com.shiroha.mmdskin.renderer.runtime.mode.RenderModeManager;
 import com.shiroha.mmdskin.renderer.runtime.texture.MMDTextureManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.CoreShaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
@@ -117,7 +117,7 @@ public final class SceneModelManager {
         matrixStack.pushPose();
         matrixStack.translate(offsetX, offsetY, offsetZ);
 
-        RenderSystem.setShader(GameRenderer::getRendertypeEntityTranslucentShader);
+        RenderSystem.setShader(CoreShaders.RENDERTYPE_ENTITY_TRANSLUCENT);
         sceneModel.render(mc.player, placeYaw, 0.0f, new Vector3f(0, 0, 0), tickDelta,
                 matrixStack, packedLight, RenderContext.WORLD);
 

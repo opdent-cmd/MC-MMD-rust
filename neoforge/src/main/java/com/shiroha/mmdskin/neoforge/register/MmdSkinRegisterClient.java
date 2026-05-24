@@ -31,19 +31,11 @@ public final class MmdSkinRegisterClient {
         "key.categories.mmdskin"
     );
 
-    public static final KeyMapping KEY_MAID_CONFIG_WHEEL = new KeyMapping(
-        "key.mmdskin.maid_config_wheel",
-        KeyConflictContext.IN_GAME,
-        InputConstants.Type.KEYSYM,
-        GLFW.GLFW_KEY_B,
-        "key.categories.mmdskin"
-    );
-
     public static final KeyMapping[] KEY_QUICK_MODELS = new KeyMapping[4];
 
     private static final NeoForgeClientNetworkBindings NETWORK_BINDINGS = new NeoForgeClientNetworkBindings();
     private static final NeoForgeClientRuntimeHooks RUNTIME_HOOKS =
-        new NeoForgeClientRuntimeHooks(KEY_CONFIG_WHEEL, KEY_MAID_CONFIG_WHEEL, KEY_QUICK_MODELS);
+        new NeoForgeClientRuntimeHooks(KEY_CONFIG_WHEEL, KEY_QUICK_MODELS);
 
     static {
         for (int i = 0; i < KEY_QUICK_MODELS.length; i++) {
@@ -70,7 +62,6 @@ public final class MmdSkinRegisterClient {
     @OnlyIn(Dist.CLIENT)
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(KEY_CONFIG_WHEEL);
-        event.register(KEY_MAID_CONFIG_WHEEL);
         for (KeyMapping keyQuickModel : KEY_QUICK_MODELS) {
             event.register(keyQuickModel);
         }
