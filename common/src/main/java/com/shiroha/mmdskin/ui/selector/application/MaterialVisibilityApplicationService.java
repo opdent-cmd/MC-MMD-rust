@@ -68,6 +68,13 @@ public class MaterialVisibilityApplicationService {
         return true;
     }
 
+    public void save(MaterialScreenContext context, List<MaterialEntryState> materials) {
+        if (context.configModelName() == null || context.configModelName().isEmpty()) {
+            return;
+        }
+        gateway.saveHiddenMaterials(context.configModelName(), snapshotHiddenMaterials(materials));
+    }
+
     public Set<Integer> snapshotHiddenMaterials(List<MaterialEntryState> materials) {
         Set<Integer> hiddenMaterials = new HashSet<>();
         for (MaterialEntryState material : materials) {

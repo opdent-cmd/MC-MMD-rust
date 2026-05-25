@@ -1,6 +1,6 @@
 # MC-MMD-rust
 
-在 Minecraft 1.21.2 中实现 MMD（MikuMikuDance）模型渲染和物理模拟的 Mod。
+在 Minecraft 1.21.3 中实现 MMD（MikuMikuDance）模型渲染和物理模拟的 Mod。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
