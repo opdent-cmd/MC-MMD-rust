@@ -3,6 +3,8 @@ plugins {
 	id 'com.gradleup.shadow' version '8.3.6'
 }
 
+def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+
 architectury {
 	platformSetupLoomIde()
 	fabric()
@@ -17,6 +19,9 @@ loom {
 			client()
 			name "Fabric Client"
 			runDir "run/client"
+			if (isWindows) {
+				vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+			}
 			programArgs "--username", "Player1"
 			vmArgs "-Xmx2G", "-Xms1G"
 		}
@@ -24,6 +29,9 @@ loom {
 			client()
 			name "Fabric Client 2"
 			runDir "run/client2"
+			if (isWindows) {
+				vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+			}
 			programArgs "--username", "Player2"
 			vmArgs "-Xmx2G", "-Xms1G"
 		}
@@ -31,6 +39,9 @@ loom {
 			server()
 			name "Fabric Server"
 			runDir "run/server"
+			if (isWindows) {
+				vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+			}
 		}
 	}
 }

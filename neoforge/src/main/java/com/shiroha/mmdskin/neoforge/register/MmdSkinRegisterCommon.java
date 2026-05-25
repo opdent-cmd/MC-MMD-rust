@@ -1,3 +1,4 @@
+// 负责 NeoForge 侧网络 Payload 注册与玩家退出清理。
 package com.shiroha.mmdskin.neoforge.register;
 
 import com.shiroha.mmdskin.MmdSkin;
@@ -13,13 +14,13 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /**
  * NeoForge 网络注册
- * NeoForge 1.21.3 使用新的 Payload 系统
+ * NeoForge 1.21.4 使用新的 Payload 系统
  */
 public class MmdSkinRegisterCommon {
     public static final ResourceLocation CHANNEL_ID = ResourceLocation.fromNamespaceAndPath(MmdSkin.MOD_ID, "network_pack");
     
     public static void Register() {
-        // NeoForge 1.21.3 网络注册在事件中完成
+        // NeoForge 1.21.4 网络注册在事件中完成
         // 参见 RegisterPayloadHandlersEvent
         NeoForge.EVENT_BUS.addListener(MmdSkinRegisterCommon::onPlayerLoggedOut);
     }

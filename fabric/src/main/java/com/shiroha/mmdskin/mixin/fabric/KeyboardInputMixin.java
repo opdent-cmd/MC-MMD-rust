@@ -1,4 +1,4 @@
-/* 文件职责：在舞台相机接管输入时清空 Fabric 键盘移动状态。 */
+/** 键盘输入清理注入，防止舞台相机模式下移动输入污染。 */
 package com.shiroha.mmdskin.mixin.fabric;
 
 import com.shiroha.mmdskin.stage.client.camera.MMDCameraController;
@@ -10,14 +10,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * KeyboardInput Mixin — 舞台模式下清零移动输入
- */
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin extends ClientInput {
 
     @Inject(method = "tick", at = @At("TAIL"))
-    private void onStageTick(boolean isSneaking, float sneakSpeedModifier, CallbackInfo ci) {
+    private void onStageTick(CallbackInfo ci) {
         if (MMDCameraController.getInstance().shouldBlockInput()) {
             this.keyPresses = Input.EMPTY;
             this.forwardImpulse = 0.0f;
@@ -25,4 +22,3 @@ public abstract class KeyboardInputMixin extends ClientInput {
         }
     }
 }
-

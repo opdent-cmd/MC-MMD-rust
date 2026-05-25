@@ -1,3 +1,4 @@
+// 负责 NeoForge 侧 YSM 兼容反射访问与运行态判断。
 package com.shiroha.mmdskin.neoforge;
 
 import java.lang.reflect.Field;
@@ -49,7 +50,7 @@ public class YsmCompat {
          ysmPresent = ModList.get().isLoaded("yes_steve_model");
          if (ysmPresent) {
             try {
-                // 反射获取 YSM 核心数据类和字段 (针对 1.21.3 混淆名)
+               // 反射获取 YSM 核心数据类和字段
                Class<?> ysmDataClass = Class.forName("com.elfmcys.yesstevemodel.oOooO0OoOoOO0OoOo0o00OoO");
                Field typeField = ysmDataClass.getDeclaredField("ooO0000oO0o0o0o000Oooo0O");
                ysmAttachmentType = (AttachmentType<?>)typeField.get(null);

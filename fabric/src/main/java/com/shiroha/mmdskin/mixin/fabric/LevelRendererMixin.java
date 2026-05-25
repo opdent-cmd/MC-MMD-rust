@@ -1,10 +1,11 @@
+/** 客户端 LevelRenderer 渲染注入与可见实体筛选。 */
 package com.shiroha.mmdskin.mixin.fabric;
 
 import com.shiroha.mmdskin.compat.vr.VRArmHider;
 import com.shiroha.mmdskin.fabric.YsmCompat;
 import com.shiroha.mmdskin.player.runtime.FirstPersonManager;
-import com.shiroha.mmdskin.renderer.integration.player.PlayerPerformanceGate;
 import com.shiroha.mmdskin.renderer.compat.IrisCompat;
+import com.shiroha.mmdskin.renderer.integration.player.PlayerPerformanceGate;
 import com.shiroha.mmdskin.ui.network.PlayerModelSyncManager;
 import net.minecraft.client.Camera;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -16,11 +17,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** LevelRenderer Mixin，用于在 MMD 第一人称与 VR 场景下决定本地玩家是否强制渲染。 */
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
     @Inject(
-        method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
+        method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
         at = @At("HEAD")
     )
     private void mmdskin$beginRenderFrame(CallbackInfo ci) {
@@ -43,28 +43,25 @@ public abstract class LevelRendererMixin {
 
         String playerName = player.getName().getString();
         String selectedModel = PlayerModelSyncManager.getPlayerModel(player.getUUID(), playerName, true);
-
         boolean isMmdDefault = selectedModel == null || selectedModel.isEmpty()
-                || selectedModel.equals("默认 (原版渲染)");
+                || selectedModel.equals("榛樿 (鍘熺増娓叉煋)");
         boolean isMmdActive = !isMmdDefault;
-        boolean isVanilaMmdModel = isMmdActive && (selectedModel.equals("VanillaModel")
+        boolean isVanillaMmdModel = isMmdActive && (selectedModel.equals("VanillaModel")
                 || selectedModel.equalsIgnoreCase("vanilla")
                 || selectedModel.equals("VanilaModel")
                 || selectedModel.equalsIgnoreCase("vanila"));
 
-        if (isMmdActive && !isVanilaMmdModel && VRArmHider.isLocalPlayerInVR()) {
+        if (isMmdActive && !isVanillaMmdModel && VRArmHider.isLocalPlayerInVR()) {
             return true;
         }
 
-        if (FirstPersonManager.shouldRenderFirstPerson() && isMmdActive && !isVanilaMmdModel) {
-
+        if (FirstPersonManager.shouldRenderFirstPerson() && isMmdActive && !isVanillaMmdModel) {
             if (YsmCompat.isYsmModelActive(player)) {
                 if (YsmCompat.isDisableSelfModel()) {
                     return camera.getXRot() >= 0;
                 }
                 return false;
             }
-
             return camera.getXRot() >= 0;
         }
 

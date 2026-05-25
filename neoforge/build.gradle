@@ -3,6 +3,8 @@ plugins {
 	id 'com.gradleup.shadow' version '8.3.6'
 }
 
+def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+
 architectury {
     platformSetupLoomIde()
     neoForge()
@@ -14,6 +16,9 @@ loom {
             client()
             name "NeoForge Client"
             runDir "run/client"
+            if (isWindows) {
+                vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+            }
             vmArgs "-Dneoforge.enabledGameTestNamespace=mmdskin"
             programArgs "--username", "Player1"
         }
@@ -21,6 +26,9 @@ loom {
             client()
             name "NeoForge Client 2"
             runDir "run/client2"
+            if (isWindows) {
+                vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+            }
             vmArgs "-Dneoforge.enabledGameTestNamespace=mmdskin"
             programArgs "--username", "Player2"
         }
@@ -28,6 +36,9 @@ loom {
             server()
             name "NeoForge Server"
             runDir "run/server"
+            if (isWindows) {
+                vmArgs "-Djavax.net.ssl.trustStoreType=Windows-ROOT"
+            }
             vmArgs "-Dneoforge.enabledGameTestNamespace=mmdskin"
         }
     }
@@ -116,10 +127,10 @@ repositories {
 
 tasks.named('processResources', ProcessResources).configure {
     def replaceProperties = [
-        minecraft_version: '1.21.3',
-        minecraft_version_range: '[1.21.3,1.22)',
+        minecraft_version: '1.21.4',
+        minecraft_version_range: '[1.21.4,1.22)',
         neoforge_version: project.neoforge_version,
-        neoforge_version_range: '[21.2,)',
+        neoforge_version_range: '[21.4,)',
         loader_version_range: '[4,)',
         mod_id: 'mmdskin',
         mod_name: '3D Skin Layers',

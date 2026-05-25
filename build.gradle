@@ -4,8 +4,15 @@ plugins {
 	id 'dev.architectury.loom' version '1.9.424' apply false
 }
 
+def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+
+// Windows 的系统根证书不一定进入 Java 默认信任库，Mojang 资产下载依赖它。
+if (isWindows) {
+	System.setProperty('javax.net.ssl.trustStoreType', 'Windows-ROOT')
+}
+
 architectury {
-	minecraft = '1.21.3'
+	minecraft = '1.21.4'
 }
 
 allprojects {
@@ -13,7 +20,7 @@ allprojects {
 	apply plugin: 'architectury-plugin'
 	
 	group = maven_group
-	version = '1.0.5-1.21.3-1'
+	version = '1.0.5-1.21.4-1'
 	
 	repositories {
 		maven { url = 'https://maven.architectury.dev/' }
@@ -66,6 +73,9 @@ allprojects {
 		javaLauncher = javaToolchains.launcherFor {
 			languageVersion = JavaLanguageVersion.of(21)
 		}
+		if (isWindows) {
+			systemProperty 'javax.net.ssl.trustStoreType', 'Windows-ROOT'
+		}
 		// 设置运行游戏时的玩家名称
 		systemProperty 'minecraft.username', rootProject.properties.getOrDefault('minecraft_username', 'Player')
 	}
@@ -83,7 +93,7 @@ subprojects {
 	}
 	
 	dependencies {
-		minecraft "com.mojang:minecraft:1.21.3"
+		minecraft "com.mojang:minecraft:1.21.4"
 		mappings loom.officialMojangMappings()
 	}
 	
