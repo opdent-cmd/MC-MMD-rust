@@ -1,26 +1,16 @@
-// 根项目配置 - 多模块项目
+// 根项目配置 - 保留构建基础设施与 Rust 引擎编译/复制
 plugins {
 	id 'architectury-plugin' version '3.4-SNAPSHOT'
-	id 'dev.architectury.loom' version '1.9.424' apply false
-}
-
-def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
-
-// Windows 的系统根证书不一定进入 Java 默认信任库，Mojang 资产下载依赖它。
-if (isWindows) {
-	System.setProperty('javax.net.ssl.trustStoreType', 'Windows-ROOT')
+	id 'dev.architectury.loom' version '1.10.455' apply false
 }
 
 architectury {
-	minecraft = '1.21.4'
+	minecraft = '1.21.5'
 }
 
 allprojects {
-	apply plugin: 'java'
-	apply plugin: 'architectury-plugin'
-	
 	group = maven_group
-	version = '1.0.5-1.21.4-1'
+	version = '1.0.5-1.21.5-1'
 	
 	repositories {
 		maven { url = 'https://maven.architectury.dev/' }
@@ -28,82 +18,38 @@ allprojects {
 		maven { url = 'https://maven.minecraftforge.net/' }
 		maven { url = 'https://maven.shedaniel.me/' }
 		maven { url = 'https://maven.terraformersmc.com/' }
-        // curseforge与modrinth平台仓库
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = 'CurseMaven'
-                    url = 'https://cursemaven.com'
-                }
-            }
-            filter {
-                includeGroup 'curse.maven'
-            }
-        }
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = 'Modrinth'
-                    url = 'https://api.modrinth.com/maven'
-                }
-            }
-            filter {
-                includeGroup 'maven.modrinth'
-            }
-        }
+		exclusiveContent {
+			forRepository {
+				maven {
+					name = 'CurseMaven'
+					url = 'https://cursemaven.com'
+				}
+			}
+			filter { includeGroup 'curse.maven' }
+		}
+		exclusiveContent {
+			forRepository {
+				maven {
+					name = 'Modrinth'
+					url = 'https://api.modrinth.com/maven'
+				}
+			}
+			filter { includeGroup 'maven.modrinth' }
+		}
 		mavenCentral()
-	}
-	
-	tasks.withType(JavaCompile).configureEach {
-		options.encoding = 'UTF-8'
-		options.release = 21
-	}
-	
-	java {
-		toolchain {
-			languageVersion = JavaLanguageVersion.of(21)
-		}
-		withSourcesJar()
-	}
-	
-	// 关键：Gradle toolchain 默认只影响编译任务；runClient/Transformer 属于 JavaExec，
-	// 若系统默认 JDK 为 21 可能触发 Architectury Transformer 的已知崩溃。
-	// 这里强制所有 JavaExec 使用 Java 21 launcher，保证开发运行环境一致。
-	tasks.withType(JavaExec).configureEach {
-		javaLauncher = javaToolchains.launcherFor {
-			languageVersion = JavaLanguageVersion.of(21)
-		}
-		if (isWindows) {
-			systemProperty 'javax.net.ssl.trustStoreType', 'Windows-ROOT'
-		}
-		// 设置运行游戏时的玩家名称
-		systemProperty 'minecraft.username', rootProject.properties.getOrDefault('minecraft_username', 'Player')
 	}
 }
 
 subprojects {
 	apply plugin: 'dev.architectury.loom'
 	
-	base {
-		archivesName = "mmdskin-${project.name}"
-	}
-	
 	loom {
 		silentMojangMappingsLicense()
 	}
 	
 	dependencies {
-		minecraft "com.mojang:minecraft:1.21.4"
+		minecraft "com.mojang:minecraft:1.21.5"
 		mappings loom.officialMojangMappings()
-	}
-	
-	// 配置runClient任务，设置固定的玩家名称（仅 Fabric）
-	if (project.name == 'fabric') {
-		tasks.named('runClient', JavaExec).configure {
-			def username = rootProject.properties.getOrDefault('minecraft_username', 'Player')
-			args '--username', username
-			jvmArgs '-Xmx4G', '-Xms2G'
-		}
 	}
 }
 
@@ -114,9 +60,6 @@ subprojects {
 def rustEngineDir = file('rust_engine')
 def nativesResourceDir = file('common/src/main/resources/natives')
 
-/**
- * 编译 Rust 原生引擎
- */
 task buildRustEngine {
 	doLast {
 		def cargo = findCargo()
@@ -135,15 +78,12 @@ task buildRustEngine {
 	}
 }
 
-/**
- * 将编译产物复制到 common 模块的 resources/natives 目录
- */
 task copyRustNatives(type: Copy) {
 	dependsOn buildRustEngine
-
+	
 	def osName = System.getProperty('os.name').toLowerCase()
 	def releaseDir = new File(rustEngineDir, 'target/release')
-
+	
 	if (osName.contains('windows')) {
 		from(releaseDir) { include 'mmd_engine.dll' }
 		into new File(nativesResourceDir, 'windows-x64')
@@ -161,26 +101,18 @@ task copyRustNatives(type: Copy) {
 	}
 }
 
-// 确保 common 模块处理资源前已完成 Rust 编译和复制
 project(':common').tasks.named('processResources').configure { dependsOn copyRustNatives }
-project(':common').tasks.named('sourcesJar').configure { dependsOn copyRustNatives }
 
-/**
- * 查找系统上的 cargo 可执行文件
- */
 static String findCargo() {
     def isWin = System.getProperty('os.name').toLowerCase().contains('windows')
     def exeSuffix = isWin ? '.exe' : ''
-    // 1. 环境变量 CARGO_HOME
     def cargoHome = System.getenv('CARGO_HOME')
     if (cargoHome) {
         def exe = new File(cargoHome, "bin/cargo${exeSuffix}")
         if (exe.exists()) return exe.absolutePath
     }
-    // 2. ~/.cargo/bin
     def home = System.getProperty('user.home')
     def dotCargo = new File(home, ".cargo/bin/cargo${exeSuffix}")
     if (dotCargo.exists()) return dotCargo.absolutePath
-    // 3. 直接依赖 PATH
     return 'cargo'
 }
